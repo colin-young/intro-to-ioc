@@ -7,7 +7,7 @@
         {
             "taskName": "build",
             "args": [
-                "${workspaceRoot}\\src\\intro-to-ioc\\project.json"
+                "${workspaceRoot}/src/intro-to-ioc/project.json"
             ],
             "isBuildCommand": true,
             "problemMatcher": "$msCompile"
@@ -15,7 +15,7 @@
         {
             "taskName": "test",
             "args": [
-                "${workspaceRoot}\\test\\intro-to-ioc.test\\project.json"
+                "${workspaceRoot}/test/intro-to-ioc.test/project.json"
             ],
             "isTestCommand": true
         }

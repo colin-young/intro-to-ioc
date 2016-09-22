@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}\\bin\\Debug\\netcoreapp1.0\\lesson02.dll",
+            "program": "${workspaceRoot}/src/intro-to-ioc/bin/Debug/netcoreapp1.0/intro-to-ioc.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "externalConsole": false,
