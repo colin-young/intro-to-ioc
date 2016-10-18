@@ -1,6 +1,6 @@
 namespace IntroToIoc
 {
-    public interface IFizzBuzzConverterStyle
+    public interface IFizzBuzzStyleConverter
     {
         string Fizz { get; }
         string Buzz { get; }

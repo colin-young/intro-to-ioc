@@ -1,34 +1,27 @@
+using System.Collections.Generic;
+using IntroToIoc.FizzBuzzTesters;
+
 namespace IntroToIoc.FizzBuzzers
 {
-    public class ConsoleFizzBuzzer
+    public class ConsoleFizzBuzzer : IFizzBuzzer
     {
-        readonly IFizzBuzzConverterStyle _converterStyle;
+        readonly IFizzBuzzTester _tester;
 
-        public ConsoleFizzBuzzer(IFizzBuzzConverterStyle converterStyle)
+        public ConsoleFizzBuzzer(IFizzBuzzTester tester)
         {
-            _converterStyle = converterStyle;
+            _tester = tester;
         }
 
-        public string Convert(int input)
+        public string FormatEntries(List<int> entries)
         {
-            var result = input.ToString();
+            var results = new List<string>();
 
-            if (input % 3 == 0)
+            foreach (var input in entries)
             {
-                result = "Fizz";
+                results.Add($"Input: {input}, Output: {_tester.Convert(input)}");
             }
 
-            if (input % 5 == 0)
-            {
-                result = "Buzz";
-            }
-
-            if (input % 3 == 0 && input % 5 == 0)
-            {
-                result = "FizzBuzz";
-            }
-
-            return result;
+            return string.Join($"\n", results);
         }
     }
 }
