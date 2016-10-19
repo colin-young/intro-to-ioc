@@ -2,32 +2,37 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using IntroToIoc;
+using IntroToIoc.FizzBuzzers;
+using IntroToIoc.FizzBuzzCaseConverters;
+using IntroToIoc.FizzBuzzStyleConverters;
+using IntroToIoc.FizzBuzzTesters;
 using Xunit;
+using FakeItEasy;
 
 namespace intro_to_ioc
 {
     public class FizzBuzzerTest
     {
         [Theory,
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 1, Output: 1"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 53, Output: 53"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 13, Output: 13"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 9, Output: Fizz"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 15, Output: FizzBuzz"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 25, Output: Buzz"),
-         InlineData(typeof(FizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "Input: 30, Output: FizzBuzz"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 1, output: [\"1\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 53, output: [\"53\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 13, output: [\"13\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 9, output: [\"fizz\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 15, output: [\"fizz\", \"buzz\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 25, output: [\"buzz\"]}"),
-         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 13, 53, 3, 9, 5, 25, 15, 30 }, "{input: 30, output: [\"fizz\", \"buzz\"]}")
+         InlineData(typeof(ConsoleFizzBuzzer), new[] { 1, 3, 5, 15 }, "Input: 1, Output: 1"),
+         InlineData(typeof(ConsoleFizzBuzzer), new[] { 1, 3, 5, 15 }, "Input: 3, Output: Fizz"),
+         InlineData(typeof(ConsoleFizzBuzzer), new[] { 1, 3, 5, 15 }, "Input: 5, Output: Buzz"),
+         InlineData(typeof(ConsoleFizzBuzzer), new[] { 1, 3, 5, 15 }, "Input: 15, Output: FizzBuzz"),
+         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 3, 5, 15 }, "{input: 1, output: 1}"),
+         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 3, 5, 15 }, "{input: 3, output: Fizz}"),
+         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 3, 5, 15 }, "{input: 5, output: Buzz}"),
+         InlineData(typeof(JsonFizzBuzzer), new[] { 1, 3, 5, 15 }, "{input: 15, output: FizzBuzz}")
         ]
-        public void NumberResultTest(Type fizzBuzzerObject, int[] inputArray, string output)
+        public void TesterTest(Type fizzBuzzerType, int[] inputArray, string output)
         {
             // arrange
-            var fizzBuzzer = Activator.CreateInstance(fizzBuzzerObject) as IFizzBuzzer;
+            var tester = A.Fake<IFizzBuzzTester>();
+            A.CallTo(() => tester.Convert(1)).Returns("1");
+            A.CallTo(() => tester.Convert(3)).Returns("Fizz");
+            A.CallTo(() => tester.Convert(5)).Returns("Buzz");
+            A.CallTo(() => tester.Convert(15)).Returns("FizzBuzz");
+
+            var fizzBuzzer = Activator.CreateInstance(fizzBuzzerType, tester) as IFizzBuzzer;
             var inputs = new List<int>(inputArray);
 
             // act
@@ -35,6 +40,48 @@ namespace intro_to_ioc
 
             // assert
             result.Should().Contain(output);
+        }
+
+        [Theory,
+         InlineData(typeof(ConcatenateConverter), "Fizz", "Buzz", "Fizz", "Buzz", "FizzBuzz"),
+         InlineData(typeof(ConcatenateConverter), "fizz", "buzz", "fizz", "buzz", "fizzbuzz"),
+         InlineData(typeof(ArrayConverter), "fizz", "buzz", "fizz", "buzz", "[\"fizz\", \"buzz\"]")
+        ]
+        public void StyleConverterTestVoid(Type converterType, string fizzCase, string buzzCase, string fizzExpect, string buzzExpect, string fizzBuzzExpect)
+        {
+            // arrange
+            var caseConverter = A.Fake<IFizzBuzzCaseConverter>();
+            A.CallTo(() => caseConverter.Fizz).Returns(fizzCase);
+            A.CallTo(() => caseConverter.Buzz).Returns(buzzCase);
+
+            var converter = Activator.CreateInstance(converterType, caseConverter) as IFizzBuzzStyleConverter;
+
+            // act
+            var fizzResult = converter.Fizz;
+            var buzzResult = converter.Buzz;
+            var fizzBuzzResult = converter.FizzBuzz;
+
+            // assert
+            fizzResult.Should().Be(fizzExpect);
+            buzzResult.Should().Be(buzzExpect);
+            fizzBuzzResult.Should().Be(fizzBuzzExpect);
+        }
+
+        [Theory,
+        InlineData(typeof(LowerCaseConverter), "fizz", "buzz"),
+        InlineData(typeof(TitleCaseConverter), "Fizz", "Buzz")]
+        public void CaseConverterTest(Type converterType, string fizzValue, string buzzValue)
+        {
+            // arrange
+            var converter = Activator.CreateInstance(converterType) as IFizzBuzzCaseConverter;
+
+            // act
+            var fizzResult = converter.Fizz;
+            var buzzResult = converter.Buzz;
+
+            // assert
+            fizzResult.Should().Be(fizzValue);
+            buzzResult.Should().Be(buzzValue);
         }
     }
 }
